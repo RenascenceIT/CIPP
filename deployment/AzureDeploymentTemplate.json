@@ -112,14 +112,14 @@
       "dependsOn": [ "[resourceId('Microsoft.Web/sites', variables('funcAppName'))]" ]
     },
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2022-03-01",
       "type": "Microsoft.Web/sites",
       "identity": {
         "type": "SystemAssigned"
       },
       "name": "[variables('funcAppName')]",
       "location": "[resourceGroup().location]",
-      "kind": "functionapp",
+      "kind": "functionapp,linux,flexconsumption",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms',variables('serverFarmName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('funcStorageName'))]"
@@ -127,12 +127,11 @@
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('serverFarmName'))]",
         "siteConfig": {
-          "Use32BitWorkerProcess": false,
-          "powerShellVersion": "7.4",
+          "linuxFxVersion": "",
           "appSettings": [
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('funcStorageName'), ';AccountKey=', listKeys(variables('funcStorageName'),'2015-05-01-preview').key1)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('funcStorageName'), ';AccountKey=', listKeys(variables('funcStorageName'),'2015-05-01-preview').keys[0].value)]"
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
@@ -155,7 +154,8 @@
               "value": "powershell"
             }
           ]
-        }
+        },
+        "httpsOnly": true
       }
     },
     {
@@ -172,7 +172,7 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2018-07-01",
+      "apiVersion": "2022-09-01",
       "name": "[variables('funcStorageName')]",
       "location": "[resourceGroup().location]",
       "tags": {
@@ -181,31 +181,24 @@
       "sku": {
         "name": "Standard_LRS"
       },
-      "kind": "Storage"
+      "kind": "StorageV2"
     },
     {
       "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "2018-02-01",
+      "apiVersion": "2022-03-01",
       "name": "[variables('serverFarmName')]",
       "location": "[resourceGroup().location]",
+      "kind": "functionapp,linux,flexconsumption",
       "sku": {
-        "name": "Y1",
-        "tier": "Dynamic",
-        "size": "Y1",
-        "family": "Y",
-        "capacity": 0
+        "name": "FC1",
+        "tier": "FlexConsumption",
+        "size": "FC1",
+        "family": "F",
+        "capacity": 1
       },
       "properties": {
-        "perSiteScaling": false,
-        "maximumElasticWorkerCount": 1,
-        "isSpot": false,
-        "reserved": false,
-        "isXenon": false,
-        "hyperV": false,
-        "targetWorkerCount": 0,
-        "targetWorkerSizeId": 0,
-        "name": "[variables('serverFarmName')]",
-        "computeMode": "Dynamic"
+        "reserved": true,
+        "maximumElasticWorkerCount": 1
       }
     },
     {
